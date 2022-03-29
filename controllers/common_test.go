@@ -97,12 +97,6 @@ var _ = Describe("Controller", func() {
 				TokenURL:  "https://special.sp/toekn",
 				AuthStyle: oauth2.AuthStyleAutoDetect,
 			},
-			RetrieveUserMetadata: func(cl *http.Client, token *oauth2.Token) (*v1beta1.TokenMetadata, error) {
-				return &v1beta1.TokenMetadata{
-					UserId:   "123",
-					Username: "john-doe",
-				}, nil
-			},
 			BaseUrl: "https://spi.on.my.machine",
 		}
 	}
@@ -122,7 +116,7 @@ var _ = Describe("Controller", func() {
 		return g, res
 	}
 
-	It("redirects to GitHub OAuth URL with state and scopes", func() {
+	It("redirects to SP OAuth URL with state and scopes", func() {
 		_, res := authenticateFlow()
 
 		Expect(res.Code).To(Equal(http.StatusFound))

@@ -84,16 +84,19 @@ func FromConfiguration(fullConfig config.Configuration, spConfig config.ServiceP
 		TokenStorage: vaultStorage,
 	}
 
+	// use the notifying token storage to automatically inform the cluster about changes in the token storage
+	ts = tokenstorage.NotifyingTokenStorage{
+		Client:       cl,
+		TokenStorage: ts,
+	}
+
 	var endpoint oauth2.Endpoint
-	var userDetails func(*http.Client, *oauth2.Token) (*v1beta1.TokenMetadata, error)
 
 	switch spConfig.ServiceProviderType {
 	case config.ServiceProviderTypeGitHub:
 		endpoint = github.Endpoint
-		userDetails = retrieveGitHubUserDetails
 	case config.ServiceProviderTypeQuay:
 		endpoint = quayEndpoint
-		userDetails = retrieveQuayUserDetails
 	default:
 		return nil, fmt.Errorf("not implemented yet")
 	}
@@ -106,6 +109,5 @@ func FromConfiguration(fullConfig config.Configuration, spConfig config.ServiceP
 		TokenStorage:         ts,
 		Endpoint:             endpoint,
 		BaseUrl:              fullConfig.BaseUrl,
-		RetrieveUserMetadata: userDetails,
 	}, nil
 }

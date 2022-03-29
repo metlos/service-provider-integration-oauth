@@ -30,8 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// commonController is the implementation of the Controller interface that assumes typical OAuth flow. It can be adapted
-// to various service providers by supplying a SP-specific RetrieveUserMetadata function.
+// commonController is the implementation of the Controller interface that assumes typical OAuth flow.
 type commonController struct {
 	Config               config.ServiceProviderConfiguration
 	JwtSigningSecret     []byte
@@ -40,7 +39,6 @@ type commonController struct {
 	TokenStorage         tokenstorage.TokenStorage
 	Endpoint             oauth2.Endpoint
 	BaseUrl              string
-	RetrieveUserMetadata func(cl *http.Client, token *oauth2.Token) (*v1beta1.TokenMetadata, error)
 }
 
 // newOAuth2Config returns a new instance of the oauth2.Config struct with the clientId, clientSecret and redirect URL
@@ -130,13 +128,7 @@ func (c commonController) Callback(ctx context.Context, w http.ResponseWriter, r
 		return
 	}
 
-	metadata, err := c.RetrieveUserMetadata(getOauth2HttpClient(ctx), token)
-	if err != nil {
-		logAndWriteResponse(w, http.StatusInternalServerError, "failed to get Service Provider user", err)
-		return
-	}
-
-	err = c.syncTokenData(ctx, token, state, metadata)
+	err = c.syncTokenData(ctx, token, state)
 	if err != nil {
 		logAndWriteResponse(w, http.StatusInternalServerError, "failed to store token data to cluster", err)
 		return
@@ -147,7 +139,6 @@ func (c commonController) Callback(ctx context.Context, w http.ResponseWriter, r
 		redirectLocation = strings.TrimSuffix(c.BaseUrl, "/") + "/" + "callback_success"
 	}
 	http.Redirect(w, r, redirectLocation, http.StatusFound)
-
 }
 
 // finishOAuthExchange implements the bulk of the Callback function. It returns the token, if obtained, the decoded
@@ -200,7 +191,7 @@ func (c commonController) finishOAuthExchange(ctx context.Context, r *http.Reque
 }
 
 // syncTokenData stores the data of the token to the configured TokenStorage.
-func (c commonController) syncTokenData(ctx context.Context, token *oauth2.Token, state *oauthstate.AuthenticatedOAuthState, metadata *v1beta1.TokenMetadata) error {
+func (c commonController) syncTokenData(ctx context.Context, token *oauth2.Token, state *oauthstate.AuthenticatedOAuthState) error {
 	// TODO if we decide to use the kubernetes identity of the user that initiated the OAuth flow, we need to use a
 	// different kubernetes client to do the creation/update here...
 	accessToken := &v1beta1.SPIAccessToken{}
@@ -215,18 +206,7 @@ func (c commonController) syncTokenData(ctx context.Context, token *oauth2.Token
 		Expiry:       uint64(token.Expiry.Unix()),
 	}
 
-	err := c.TokenStorage.Store(ctx, accessToken, &apiToken)
-	if err != nil {
-		return err
-	}
-
-	accessToken.Status.TokenMetadata = metadata
-
-	if err = c.K8sClient.Update(ctx, accessToken); err != nil {
-		return err
-	}
-
-	return nil
+	return c.TokenStorage.Store(ctx, accessToken, &apiToken)
 }
 
 func logAndWriteResponse(w http.ResponseWriter, status int, msg string, err error) {

@@ -10,7 +10,6 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/redhat-appstudio/service-provider-integration-operator v0.4.0
-	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.19.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	k8s.io/api v0.22.4
@@ -39,7 +38,6 @@ require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
-	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
@@ -61,6 +59,7 @@ require (
 	github.com/denverdino/aliyungo v0.0.0-20190125010748-a747050bb1ba // indirect
 	github.com/digitalocean/godo v1.7.5 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
+	github.com/dnaeon/go-vcr v1.2.0 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
@@ -88,6 +87,7 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gophercloud/gophercloud v0.1.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
+	github.com/hashicorp/consul/sdk v0.8.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-discover v0.0.0-20210818145131-c573d69da192 // indirect
@@ -119,14 +119,13 @@ require (
 	github.com/hashicorp/raft-autopilot v0.1.3 // indirect
 	github.com/hashicorp/raft-boltdb/v2 v2.0.0-20210421194847-a7e34179d62c // indirect
 	github.com/hashicorp/raft-snapshot v1.0.3 // indirect
-	github.com/hashicorp/vault-plugin-secrets-kv v0.10.1 // indirect
 	github.com/hashicorp/vault/api v1.3.1 // indirect
-	github.com/hashicorp/vault/api/auth/kubernetes v0.1.0 // indirect
 	github.com/hashicorp/vault/sdk v0.3.1-0.20220224202448-00c495209246 // indirect
 	github.com/hashicorp/vic v1.5.1-0.20190403131502-bbfe86ec9443 // indirect
 	github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/jarcoal/httpmock v1.0.7 // indirect
 	github.com/jefferai/isbadcipher v0.0.0-20190226160619-51d2077c035f // indirect
 	github.com/jefferai/jsonx v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -173,6 +172,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/softlayer/softlayer-go v0.0.0-20180806151055-260589d94c7d // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/tencentcloud/tencentcloud-sdk-go v1.0.162 // indirect
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
@@ -204,6 +204,7 @@ require (
 	google.golang.org/genproto v0.0.0-20220207185906-7721543eae58 // indirect
 	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/resty.v1 v1.12.0 // indirect
@@ -219,3 +220,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
+
+// PR-96 in service-provider-integration-operator
+replace github.com/redhat-appstudio/service-provider-integration-operator => github.com/metlos/service-provider-integration-operator v0.0.0-20220318085714-89382920d7b3
