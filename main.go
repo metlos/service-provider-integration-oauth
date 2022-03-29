@@ -77,15 +77,22 @@ func main() {
 	args := cliArgs{}
 	arg.MustParse(&args)
 
-	var logger *zap.Logger
+	var loggerConfig zap.Config
 	if args.DevMode {
-		logger, _ = zap.NewDevelopment()
+		loggerConfig = zap.NewDevelopmentConfig()
 	} else {
-		logger, _ = zap.NewProduction()
+		loggerConfig = zap.NewProductionConfig()
 	}
-	if logger != nil {
-		zap.ReplaceGlobals(logger)
+	loggerConfig.OutputPaths = []string{"stdout"}
+	loggerConfig.ErrorOutputPaths = []string{"stdout"}
+	logger, err := loggerConfig.Build()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize logging: %s", err.Error())
+		os.Exit(1)
 	}
+	defer logger.Sync()
+	undo := zap.ReplaceGlobals(logger)
+	defer undo()
 
 	cfg, err := config.LoadFrom(args.ConfigFile)
 	if err != nil {
