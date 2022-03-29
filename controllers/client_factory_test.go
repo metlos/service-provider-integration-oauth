@@ -14,11 +14,21 @@
 package controllers
 
 import (
-	"golang.org/x/oauth2"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// quayEndpoint is the OAuth endpoints specification of quay.io
-var quayEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://quay.io/oauth/authorize",
-	TokenURL: "https://quay.io/oauth/access_token",
+func TestCreateClient(t *testing.T) {
+	// the custom mapper is there to avoid the dynamic mapper used by the client by default. This is so that the
+	// dynamic mapper doesn't try to discover the API that is just not there...
+	cl, err := CreateClient(&rest.Config{}, client.Options{
+		Mapper: meta.NewDefaultRESTMapper([]schema.GroupVersion{}),
+	})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, cl.Scheme().AllKnownTypes())
 }

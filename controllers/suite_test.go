@@ -17,6 +17,8 @@ import (
 	"context"
 	"testing"
 
+	authz "k8s.io/api/authorization/v1"
+
 	"github.com/hashicorp/vault/vault"
 
 	"github.com/redhat-appstudio/service-provider-integration-operator/api/v1beta1"
@@ -89,6 +91,7 @@ var _ = BeforeSuite(func() {
 
 	Expect(corev1.AddToScheme(IT.Scheme)).To(Succeed())
 	Expect(auth.AddToScheme(IT.Scheme)).To(Succeed())
+	Expect(authz.AddToScheme(IT.Scheme)).To(Succeed())
 	Expect(v1beta1.AddToScheme(IT.Scheme)).To(Succeed())
 
 	// create the test namespace which we'll use for the tests
@@ -100,6 +103,11 @@ var _ = BeforeSuite(func() {
 
 	IT.VaultTestCluster, IT.TokenStorage = tokenstorage.CreateTestVaultTokenStorage(GinkgoT())
 	Expect(err).NotTo(HaveOccurred())
+
+	IT.TokenStorage = tokenstorage.NotifyingTokenStorage{
+		Client:       IT.Client,
+		TokenStorage: IT.TokenStorage,
+	}
 
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

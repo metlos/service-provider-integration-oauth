@@ -24,6 +24,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alexedwards/scs"
+	"github.com/alexedwards/scs/stores/memstore"
+
 	"github.com/redhat-appstudio/service-provider-integration-operator/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -46,7 +49,7 @@ var _ = Describe("Controller", func() {
 		codec, err := oauthstate.NewCodec([]byte("secret"))
 		Expect(err).NotTo(HaveOccurred())
 
-		ret, err := codec.EncodeAnonymous(&oauthstate.AnonymousOAuthState{
+		ret, err := codec.Encode(&oauthstate.AnonymousOAuthState{
 			TokenName:           "mytoken",
 			TokenNamespace:      IT.Namespace,
 			IssuedAt:            time.Now().Unix(),
@@ -97,7 +100,8 @@ var _ = Describe("Controller", func() {
 				TokenURL:  "https://special.sp/toekn",
 				AuthStyle: oauth2.AuthStyleAutoDetect,
 			},
-			BaseUrl: "https://spi.on.my.machine",
+			BaseUrl:        "https://spi.on.my.machine",
+			SessionManager: scs.NewManager(memstore.New(1000000 * time.Hour)),
 		}
 	}
 
@@ -131,6 +135,7 @@ var _ = Describe("Controller", func() {
 		Expect(redirect.Query().Get("response_type")).To(Equal("code"))
 		Expect(redirect.Query().Get("state")).NotTo(BeEmpty())
 		Expect(redirect.Query().Get("scope")).To(Equal("a b"))
+		Expect(res.Result().Cookies()).NotTo(BeEmpty())
 	})
 
 	When("OAuth initiated", func() {
@@ -148,7 +153,7 @@ var _ = Describe("Controller", func() {
 			t := &v1beta1.SPIAccessToken{}
 			Eventually(func() error {
 				return IT.Client.Get(IT.Context, client.ObjectKey{Name: "mytoken", Namespace: IT.Namespace}, t)
-			}).WithTimeout(500 * time.Millisecond).Should(Succeed())
+			}).Should(Succeed())
 		})
 
 		AfterEach(func() {
@@ -157,7 +162,7 @@ var _ = Describe("Controller", func() {
 			Expect(IT.Client.Delete(IT.Context, t)).To(Succeed())
 			Eventually(func() error {
 				return IT.Client.Get(IT.Context, client.ObjectKey{Name: "mytoken", Namespace: IT.Namespace}, t)
-			}).WithTimeout(500 * time.Millisecond).ShouldNot(Succeed())
+			}).ShouldNot(Succeed())
 		})
 
 		It("exchanges the code for token", func() {
@@ -170,6 +175,7 @@ var _ = Describe("Controller", func() {
 
 			// simulate github redirecting back to our callback endpoint...
 			req := httptest.NewRequest("GET", fmt.Sprintf("/?state=%s&code=123", state), nil)
+			req.Header.Set("Cookie", res.Result().Cookies()[0].String())
 			res = httptest.NewRecorder()
 
 			// The callback handler will be reaching out to github to exchange the code for the token.. let's fake that
@@ -213,6 +219,7 @@ var _ = Describe("Controller", func() {
 
 			// simulate github redirecting back to our callback endpoint...
 			req := httptest.NewRequest("GET", fmt.Sprintf("/?state=%s&code=123&redirect_after_login=https://redirect.to?foo=bar", state), nil)
+			req.Header.Set("Cookie", res.Result().Cookies()[0].String())
 			res = httptest.NewRecorder()
 
 			// The callback handler will be reaching out to github to exchange the code for the token.. let's fake that

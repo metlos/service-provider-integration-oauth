@@ -18,18 +18,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"k8s.io/client-go/rest"
-
-	"github.com/redhat-appstudio/service-provider-integration-operator/api/v1beta1"
-	"github.com/redhat-appstudio/service-provider-integration-operator/pkg/spi-shared/tokenstorage"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/github"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/alexedwards/scs"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/client-go/rest"
 
 	"github.com/redhat-appstudio/service-provider-integration-oauth/authentication"
 	"github.com/redhat-appstudio/service-provider-integration-operator/pkg/spi-shared/config"
+	"github.com/redhat-appstudio/service-provider-integration-operator/pkg/spi-shared/tokenstorage"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 )
 
 // Controller implements the OAuth flow. There are specific implementations for each service provider type. These
@@ -55,22 +53,13 @@ const (
 
 // FromConfiguration is a factory function to create instances of the Controller based on the service provider
 // configuration.
-func FromConfiguration(fullConfig config.Configuration, spConfig config.ServiceProviderConfiguration, kubeConfig *rest.Config) (Controller, error) {
+func FromConfiguration(fullConfig config.Configuration, spConfig config.ServiceProviderConfiguration, kubeConfig *rest.Config, sessionManager *scs.Manager) (Controller, error) {
 	authtor, err := authentication.NewFromConfig(fullConfig, kubeConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	scheme := runtime.NewScheme()
-	if err = corev1.AddToScheme(scheme); err != nil {
-		return nil, err
-	}
-
-	if err = v1beta1.AddToScheme(scheme); err != nil {
-		return nil, err
-	}
-
-	cl, err := client.New(kubeConfig, client.Options{Scheme: scheme})
+	cl, err := CreateClient(kubeConfig, client.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +91,13 @@ func FromConfiguration(fullConfig config.Configuration, spConfig config.ServiceP
 	}
 
 	return &commonController{
-		Config:               spConfig,
-		JwtSigningSecret:     fullConfig.SharedSecret,
-		Authenticator:        authtor,
-		K8sClient:            cl,
-		TokenStorage:         ts,
-		Endpoint:             endpoint,
-		BaseUrl:              fullConfig.BaseUrl,
+		Config:           spConfig,
+		JwtSigningSecret: fullConfig.SharedSecret,
+		Authenticator:    authtor,
+		K8sClient:        cl,
+		TokenStorage:     ts,
+		Endpoint:         endpoint,
+		BaseUrl:          fullConfig.BaseUrl,
+		SessionManager:   sessionManager,
 	}, nil
 }
