@@ -26,7 +26,7 @@ help: ## Display this help.
 ##@ Development
 
 test: fmt fmt_license vet envtest ## Run the unit tests
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -cover
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 run: ## Run the binary
 	go run main.go
